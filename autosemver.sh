@@ -55,9 +55,11 @@ fi
 echo "🔍 Analyzing commit: $COMMIT_HASH"
 
 # Verify commit hash exists
-if ! git cat-file -e "$COMMIT_HASH" 2>/dev/null; then
-    echo "❌ Error: Commit hash '$COMMIT_HASH' not found or is not a valid commit object." >&2
-    exit 1
+if git cat-file -e $COMMIT_HASH^{commit}; then
+  echo "Commit '$COMMIT_HASH' found." 
+else
+  echo "❌ Error: Commit hash '$COMMIT_HASH' not found or is not a valid commit object." >&2
+  exit 1
 fi
 
 # Get list of .dart files in the repository at the specified commit's tree
