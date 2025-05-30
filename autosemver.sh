@@ -61,7 +61,7 @@ if ! git cat-file -e "$COMMIT_HASH" 2>/dev/null; then
 fi
 
 # Get list of .dart files in the repository at the specified commit's tree
-DART_FILES_IN_COMMIT_TREE_LIST=$(git ls-tree "cb243b1f3662e63683ea6ab5a21de34720f9197f" -r --name-only | grep "\.dart$")
+DART_FILES_IN_COMMIT_TREE_LIST=$(git ls-tree "$COMMIT_HASH" -r --name-only | grep "\.dart$")
 
 TOTAL_PROJ_LINES=0
 if [ -z "$DART_FILES_IN_COMMIT_TREE_LIST" ]; then
