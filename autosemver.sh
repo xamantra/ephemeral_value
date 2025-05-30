@@ -55,12 +55,12 @@ fi
 echo "🔍 Analyzing commit: $COMMIT_HASH"
 
 # Verify commit hash exists
-if git cat-file -e $COMMIT_HASH^{commit}; then
-  echo "Commit '$COMMIT_HASH' found." 
-else
-  echo "❌ Error: Commit hash '$COMMIT_HASH' not found or is not a valid commit object." >&2
-  exit 1
-fi
+# if git cat-file -e "$COMMIT_HASH"^{commit}; then
+#   echo "Commit '$COMMIT_HASH' found." 
+# else
+#   echo "❌ Error: Commit hash '$COMMIT_HASH' not found or is not a valid commit object." >&2
+#   exit 1
+# fi
 
 # Get list of .dart files in the repository at the specified commit's tree
 DART_FILES_IN_COMMIT_TREE_LIST=$(git ls-tree "$COMMIT_HASH" -r --name-only | grep "\.dart$")
@@ -164,6 +164,7 @@ NEW_PATCH=$PATCH
 # So we compare int(PERCENT_CHANGED) with thresholds, or use bc -l for float comparison
 COMPARE_MAJOR=$(echo "$PERCENT_CHANGED >= 25" | bc -l)
 COMPARE_MINOR=$(echo "$PERCENT_CHANGED >= 10" | bc -l)
+COMPARE_PATCH=$(echo "$PERCENT_CHANGED >= 1" | bc -l)
 
 if [ "$COMPARE_MAJOR" -eq 1 ]; then
   BUMP_TYPE="MAJOR"
@@ -174,9 +175,12 @@ elif [ "$COMPARE_MINOR" -eq 1 ]; then
   BUMP_TYPE="MINOR"
   NEW_MINOR=$((MINOR + 1))
   NEW_PATCH=0
-else
+elif [ "$COMPARE_PATCH" -eq 1 ]; then
   BUMP_TYPE="PATCH"
   NEW_PATCH=$((PATCH + 1))
+else
+  echo "No dart changes detected that warrant a version bump."
+  exit 0
 fi
 
 NEW_VERSION_SEMANTIC="$NEW_MAJOR.$NEW_MINOR.$NEW_PATCH"
