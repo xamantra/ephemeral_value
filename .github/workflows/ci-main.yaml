@@ -51,6 +51,6 @@ jobs:
         with:
           commit_message: "auto-semver: Update version and changelog [skip ci]"
           tagging_message: 'v${{ steps.autosemver.outputs.new_version }}'
-          create_git_tag_only: true
+          create_git_tag_only: false
           skip_dirty_check: false
           # Optional: specify branch, author, etc.
