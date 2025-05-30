@@ -127,6 +127,8 @@ fi
 echo "  📈 Version update type: $update_type"
 echo "  New version will be: $new_version"
 
+echo "NEW_VERSION=$new_version" >> "$GITHUB_ENV"
+
 # 7. Update pubspec.yaml
 read -p "Do you want to update $PUBSPEC_FILE to version $new_version? (y/N): " confirm
 if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
