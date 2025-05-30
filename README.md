@@ -2,7 +2,8 @@
 
 [![pub package](https://img.shields.io/pub/v/ephemeral_value.svg)](https://pub.dev/packages/ephemeral_value)
 [![codecov](https://codecov.io/gh/xamantra/ephemeral_value/branch/dev/graph/badge.svg?token=UDJ7RRLSZI)](https://codecov.io/gh/xamantra/ephemeral_value)
-[![License](https://img.shields.io/github/license/xamantra/ephemeral_value)](https://github.com/xamantra/ephemeral_value/blob/main/LICENSE)
+![GitHub License](https://img.shields.io/github/license/xamantra/ephemeral_value?label=license)
+
 
 <!-- [![GitHub stars](https://img.shields.io/github/stars/xamantra/ephemeral_value.svg?style=social)](https://github.com/xamantra/ephemeral_value) -->
 
