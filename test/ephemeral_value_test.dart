@@ -139,7 +139,9 @@ void main() {
     });
 
     test('TestEphemeral for abstract class coverage', () {
-      final t = TestEphemeral<int>(42);
+      Ephemeral<int> t;
+      t = TestEphemeral<int>(42);
+      expect(t, isA<TestEphemeral<int>>());
       expect(t.value, 42);
       expect(t.toNone().value, 42);
       expect(t.toInitial(1, 'msg').value, 1);

@@ -1,7 +1,8 @@
 # 🌟 Ephemeral Value
 
 [![pub package](https://img.shields.io/pub/v/ephemeral_value.svg)](https://pub.dev/packages/ephemeral_value)
-[![License](https://img.shields.io/github/license/xamantra/ephemeral_value)](https://github.com/xamantra/ephemeral_value/blob/main/LICENSE)
+[![codecov](https://codecov.io/gh/xamantra/ephemeral_value/branch/dev/graph/badge.svg?token=UDJ7RRLSZI)](https://codecov.io/gh/xamantra/ephemeral_value)
+![GitHub License](https://img.shields.io/github/license/xamantra/ephemeral_value?label=license)
 
 <!-- [![GitHub stars](https://img.shields.io/github/stars/xamantra/ephemeral_value.svg?style=social)](https://github.com/xamantra/ephemeral_value) -->
 
@@ -31,7 +32,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-    ephemeral_value: ^1.0.0
+  ephemeral_value: ^1.0.0
 ```
 
 ### 2. Import
@@ -87,9 +88,9 @@ try {
 if (state.user is LoadingValue) {
   return const CircularProgressIndicator();
 } else if (state.user is SuccessValue) {
-  return Text('User: ${(state.user as SuccessValue).value.name}');
+  return Text('User: ${state.user.value.name}');
 } else if (state.user is ErrorValue) {
-  return Text('Error: ${(state.user as ErrorValue).error}');
+  return Text('Error: ${state.user.error}');
 }
 ```
 
