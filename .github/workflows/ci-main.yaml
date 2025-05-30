@@ -41,6 +41,13 @@ jobs:
           ./autosemver.sh "${{ github.event.inputs.target_commit }}"
           ./autochangelog.sh "${{ github.event.inputs.target_commit }}"
 
+      - name: Get pubspec version
+        id: get_version
+        shell: bash
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//')
+          echo "pubspec_version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Configure Git
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
@@ -50,7 +57,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "auto-semver: Update version and changelog [skip ci]"
-          tagging_message: 'v${{ steps.autosemver.outputs.new_version }}'
+          tagging_message: 'v${{ steps.get_version.outputs.pubspec_version }}'
           create_git_tag_only: false
           skip_dirty_check: false
           # Optional: specify branch, author, etc.
