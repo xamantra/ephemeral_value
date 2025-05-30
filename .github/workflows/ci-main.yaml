@@ -35,6 +35,7 @@ jobs:
 
       - name: Make autosemver.sh executable and run it
         id: autosemver
+        shell: bash
         run: |
           chmod +x ./autosemver.sh
           chmod +x ./autochangelog.sh
