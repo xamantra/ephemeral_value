@@ -64,6 +64,20 @@ abstract class Ephemeral<T> {
   EmptyValue<T> toEmpty([T? value, String? message]) {
     return EmptyValue<T>(value ?? this.value, message);
   }
+
+  /// Changes the current state to `RefreshingValue`.
+  ///
+  /// If you don't provide a value, the state will change retaining the current value.
+  RefreshingValue<T> toRefreshing([T? value, String? message]) {
+    return RefreshingValue<T>(value ?? this.value, message);
+  }
+
+  /// Changes the current state to `StaleValue`.
+  ///
+  /// If you don't provide a value, the state will change retaining the current value.
+  StaleValue<T> toStale([T? value, DateTime? lastUpdated, String? message]) {
+    return StaleValue<T>(value ?? this.value, lastUpdated, message);
+  }
 }
 
 /// Use to intialize a nullable value.
@@ -159,4 +173,35 @@ class EmptyValue<T> extends Ephemeral<T> with EquatableMixin {
 
   @override
   List<Object?> get props => [value, message];
+}
+
+/// A state indicating that the value is being refreshed (e.g., background update).
+class RefreshingValue<T> extends Ephemeral<T> with EquatableMixin {
+  @override
+  final T? value;
+  final String? message;
+
+  const RefreshingValue([this.value, this.message]);
+
+  @override
+  String toString() => 'RefreshingValue(value: $value, message: $message)';
+
+  @override
+  List<Object?> get props => [value, message];
+}
+
+/// A state indicating that the value is available but outdated (stale).
+class StaleValue<T> extends Ephemeral<T> with EquatableMixin {
+  @override
+  final T? value;
+  final DateTime? lastUpdated;
+  final String? message;
+
+  const StaleValue([this.value, this.lastUpdated, this.message]);
+
+  @override
+  String toString() => 'StaleValue(value: $value, lastUpdated: $lastUpdated, message: $message)';
+
+  @override
+  List<Object?> get props => [value, lastUpdated, message];
 }
