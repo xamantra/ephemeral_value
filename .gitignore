@@ -7,4 +7,5 @@
 pubspec.lock
 
 coverage/
+*.sh
 *.txt
