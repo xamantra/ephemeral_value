@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      target_commit:
+        description: "Optional argument for autosemver.sh and autochangelog.sh"
+        required: false
+        default: ""
 
 jobs:
   analyze-and-semver:
@@ -25,9 +31,16 @@ jobs:
       - name: Make autosemver.sh executable and run it
         run: |
           chmod +x ./autosemver.sh
-          ./autosemver.sh <<< "y"
+          chmod +x ./autochangelog.sh
+          ./autosemver.sh "${{ github.event.inputs.target_commit }}"
+          ./autochangelog.sh "${{ github.event.inputs.target_commit }}"
 
       - name: Commit version bump (if any)
+        if: |
+          always() && (
+            !contains(steps.check_changes.outputs.changed, 'false')
+          )
+        id: commit_autosemver
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

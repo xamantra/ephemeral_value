@@ -1,140 +1,187 @@
 #!/bin/bash
 
-# --- Configuration ---
-PUBSPEC_FILE="pubspec.yaml"
-DART_FILES_PATTERN="*.dart"
+# Default to the latest commit if no hash is provided
+COMMIT_HASH_INPUT=${1:-HEAD}
 
 # --- Helper Functions ---
 
 # Function to get the current version from pubspec.yaml
 get_current_version() {
-  grep '^version:' "$PUBSPEC_FILE" | awk '{print $2}'
+  if [ ! -f pubspec.yaml ]; then
+    echo "Error: pubspec.yaml not found in the current directory!" >&2
+    exit 1
+  fi
+  grep '^version:' pubspec.yaml | sed 's/version:[[:space:]]*//'
 }
 
 # Function to update the version in pubspec.yaml
 update_pubspec_version() {
-  local new_version="$1"
-  # Use sed to update the version. Handles both macOS and Linux sed.
-  if sed --version >/dev/null 2>&1; then # GNU sed
-    sed -i "s/^version: .*/version: $new_version/" "$PUBSPEC_FILE"
-  else # macOS sed
-    sed -i '' "s/^version: .*/version: $new_version/" "$PUBSPEC_FILE"
+  local new_full_version="$1" # e.g., "1.2.3" or "1.2.3+4"
+  if [ ! -f pubspec.yaml ]; then
+    echo "Error: pubspec.yaml not found!" >&2
+    exit 1
   fi
-  echo "✅ Version updated to $new_version in $PUBSPEC_FILE"
-}
-
-# Function to count total lines in specified files
-count_total_lines() {
-  local total_lines=0
-  while IFS= read -r file; do
-    if [ -f "$file" ]; then
-        lines_in_file=$(wc -l < "$file")
-        total_lines=$((total_lines + lines_in_file))
-    fi
-  done < <(find . -type f -name "$DART_FILES_PATTERN" ! -path "./.git/*" ! -path "./build/*")
-  echo "$total_lines"
-}
-
-# Function to count changed lines in .dart files in the latest commit
-count_changed_lines() {
-  local changed_lines=0
-  git diff --numstat HEAD~1 HEAD -- $DART_FILES_PATTERN | awk '{s+=$1+$2} END {print s}'
+  # This sed command robustly replaces the version line.
+  # It matches "version:" at the beginning of a line, followed by optional spaces, and any characters,
+  # and replaces it with "version: " followed by the new version string.
+  sed -i.bak "s/^version:[[:space:]]*.*/version: $new_full_version/" pubspec.yaml
+  if [ $? -eq 0 ]; then
+    rm pubspec.yaml.bak # Remove backup file on success
+    echo "✅ Version updated to $new_full_version in pubspec.yaml"
+  else
+    echo "❌ Error: Failed to update version in pubspec.yaml. A backup 'pubspec.yaml.bak' may have been created." >&2
+  fi
 }
 
 # --- Main Script ---
 
-echo "🔍 Analyzing changes for version update..."
-
-# 1. Get current version
-current_version=$(get_current_version)
-if [ -z "$current_version" ]; then
-  echo "❌ Error: Could not find 'version:' in $PUBSPEC_FILE."
+# Check if we are in a git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  echo "❌ Error: Not a git repository. Please run this script from the root of a git repository." >&2
   exit 1
 fi
-echo "  Current version: $current_version"
 
-# 2. Calculate TOTAL_PROJ_LINES
-total_proj_lines=$(count_total_lines)
-if [ "$total_proj_lines" -eq 0 ]; then
-  echo "⚠️ Warning: No .dart files found or all .dart files are empty. Cannot calculate version change."
-  exit 0
-fi
-echo "  Total lines in *.dart files (TOTAL_PROJ_LINES): $total_proj_lines"
-
-# 3. Calculate LINES_CHANGED
-lines_changed=$(count_changed_lines)
-if [ -z "$lines_changed" ]; then
-    lines_changed=0
-fi
-echo "  Lines changed in *.dart files in the latest commit (LINES_CHANGED): $lines_changed"
-
-if [ "$lines_changed" -eq 0 ]; then
-  echo "ℹ️ No *.dart file changes detected in the latest commit. No version update needed."
-  exit 0
-fi
-
-# 4. Calculate the ratio and percentage
-# bc is used for floating point arithmetic
-# Calculate ratio with more precision for comparisons
-ratio_decimal=$(echo "scale=6; $lines_changed / $total_proj_lines" | bc)
-# Calculate percentage for display, rounded to 2 decimal places by bc itself
-percentage=$(echo "scale=2; ($lines_changed * 100) / $total_proj_lines" | bc)
-
-# Using printf for formatted output. Note: %% prints a literal %
-printf "  Change ratio (LINES_CHANGED / TOTAL_PROJ_LINES): %.2f%%\n" "$percentage"
-
-# For logical comparisons, we use the original decimal ratio
-ratio_for_comparison="$ratio_decimal"
-
-# 5. Determine version increment based on the ratio
-IFS='.' read -r major minor patch <<< "$current_version"
-new_major=$major
-new_minor=$minor
-new_patch=$patch
-
-update_type=""
-
-# Use bc for floating point comparisons with ratio_for_comparison
-if (( $(echo "$ratio_for_comparison >= 0.25" | bc -l) )); then
-  new_major=$((major + 1))
-  new_minor=0
-  new_patch=0
-  update_type="MAJOR"
-elif (( $(echo "$ratio_for_comparison >= 0.10" | bc -l) )); then
-  new_minor=$((minor + 1))
-  new_patch=0
-  update_type="MINOR"
-elif (( $(echo "$ratio_for_comparison > 0 && $ratio_for_comparison < 0.10" | bc -l) )); then
-  new_patch=$((patch + 1))
-  update_type="PATCH"
-elif (( $(echo "$ratio_for_comparison == 0.10" | bc -l) )); then
-  new_patch=$((patch + 1))
-  update_type="PATCH"
-else # ratio is 0 (already handled) or something unexpected below smallest threshold but > 0
-    # This case might be redundant due to "lines_changed == 0" check,
-    # but included for completeness if logic changes
-  echo "ℹ️ Change ratio ($percentage%) does not meet criteria for PATCH, MINOR, or MAJOR update. No version change."
-  exit 0
-fi
-
-new_version="$new_major.$new_minor.$new_patch"
-
-if [ "$new_version" == "$current_version" ]; then
-    echo "ℹ️ Calculated new version ($new_version) is the same as current. No update needed."
-    exit 0
-fi
-
-echo "  📈 Version update type: $update_type"
-echo "  New version will be: $new_version"
-
-echo "NEW_VERSION=$new_version" >> "$GITHUB_ENV"
-
-# 7. Update pubspec.yaml
-read -p "Do you want to update $PUBSPEC_FILE to version $new_version? (y/N): " confirm
-if [[ "$confirm" =~ ^[yY](es)?$ ]]; then
-  update_pubspec_version "$new_version"
+# Resolve HEAD to its actual commit hash if passed
+if [[ "$COMMIT_HASH_INPUT" == "HEAD" ]]; then
+  COMMIT_HASH=$(git rev-parse HEAD)
+  if [ $? -ne 0 ]; then
+    echo "❌ Error: Could not resolve HEAD to a commit hash." >&2
+    exit 1
+  fi
 else
-  echo "🚫 Version update aborted by user."
+  COMMIT_HASH=$COMMIT_HASH_INPUT
 fi
 
-exit 0
+echo "🔍 Analyzing commit: $COMMIT_HASH"
+
+# Verify commit hash exists
+if ! git cat-file -e "$COMMIT_HASH" 2>/dev/null; then
+    echo "❌ Error: Commit hash '$COMMIT_HASH' not found or is not a valid commit object." >&2
+    exit 1
+fi
+
+# Get list of .dart files in the repository at the specified commit's tree
+DART_FILES_IN_COMMIT_TREE_LIST=$(git ls-tree "cb243b1f3662e63683ea6ab5a21de34720f9197f" -r --name-only | grep "\.dart$")
+
+TOTAL_PROJ_LINES=0
+if [ -z "$DART_FILES_IN_COMMIT_TREE_LIST" ]; then
+  echo "ℹ️ 'git ls-tree' found no '*.dart' files in the tree of commit $COMMIT_HASH."
+  TOTAL_PROJ_LINES=0
+else
+  # Calculate total lines for these files by showing their content at that commit
+  # Using a loop for clarity and to handle potential issues with xargs and many files, though xargs is often more performant.
+  CURRENT_IFS="$IFS"
+  IFS=$'\n' # Handle filenames with spaces correctly if any were to appear (ls-tree --name-only usually doesn't create them)
+  for filepath in $DART_FILES_IN_COMMIT_TREE_LIST; do
+    # git show $COMMIT_HASH:<path> gets the content of the file at that commit
+    lines_in_file=$(git show "$COMMIT_HASH":"$filepath" 2>/dev/null | wc -l | awk '{print $1}')
+    TOTAL_PROJ_LINES=$((TOTAL_PROJ_LINES + lines_in_file))
+  done
+  IFS="$CURRENT_IFS"
+fi
+
+EFFECTIVE_TOTAL_LINES_FOR_CALCULATION=$TOTAL_PROJ_LINES
+if [ "$TOTAL_PROJ_LINES" -eq 0 ]; then
+  echo "⚠️ Total lines in all '.dart' files in the tree of commit $COMMIT_HASH is 0."
+  echo "   This means either no '*.dart' files were found by 'git ls-tree' for this commit, or all such files were empty."
+  echo "   Debug: Output of 'git ls-tree -r --name-only \"$COMMIT_HASH\" -- \"*.dart\"':"
+  if [ -z "$DART_FILES_IN_COMMIT_TREE_LIST" ]; then
+    echo "     (No files listed)"
+  else
+    echo "$DART_FILES_IN_COMMIT_TREE_LIST" | sed 's/^/     /' # Indent output for readability
+  fi
+  EFFECTIVE_TOTAL_LINES_FOR_CALCULATION=1 # Avoid division by zero. If LINES_CHANGED > 0, this will result in a large percentage.
+fi
+echo "📊 Total .dart lines in project tree at $COMMIT_HASH: $TOTAL_PROJ_LINES"
+
+
+# Get lines changed in .dart files IN the specified commit (compared to its parent)
+# For the very first commit, $COMMIT_HASH^! will cause an error.
+# We use $COMMIT_HASH for the first commit (show against empty tree) or $COMMIT_HASH^! for subsequent commits.
+PARENT_COMMIT_EXISTS=$(git rev-parse --verify "$COMMIT_HASH^" 2>/dev/null)
+DIFF_TARGET="$COMMIT_HASH" # For first commit
+if [ -n "$PARENT_COMMIT_EXISTS" ]; then
+    DIFF_TARGET="$COMMIT_HASH^!" # For subsequent commits, compare to parent(s)
+fi
+
+LINES_CHANGED_OUTPUT=$(git diff-tree --no-commit-id --numstat -r "$DIFF_TARGET" -- "*.dart")
+LINES_CHANGED=0
+if [ $? -ne 0 ] && [ -z "$PARENT_COMMIT_EXISTS" ]; then # diff-tree failed AND it's the first commit
+    echo "🌱 First commit. Considering all .dart lines in this commit as changed."
+    LINES_CHANGED=$TOTAL_PROJ_LINES # All lines in the project (at this commit) are new
+elif [ -n "$LINES_CHANGED_OUTPUT" ]; then
+    LINES_CHANGED=$(echo "$LINES_CHANGED_OUTPUT" | awk '{s+=$1; s+=$2} END {print s}')
+else
+    # No .dart files in the diff output, or diff-tree had an issue not related to first commit
+    LINES_CHANGED=0
+fi
+
+echo "🔄 Lines changed (added+deleted) in .dart files by commit $COMMIT_HASH: $LINES_CHANGED"
+
+# Calculate percentage changed
+if [ "$EFFECTIVE_TOTAL_LINES_FOR_CALCULATION" -eq 0 ]; then # Should actually be 1 due to protection above
+  PERCENT_CHANGED=0
+elif [ "$LINES_CHANGED" -eq 0 ]; then
+    PERCENT_CHANGED=0
+else
+  PERCENT_CHANGED=$(echo "scale=4; ($LINES_CHANGED / $EFFECTIVE_TOTAL_LINES_FOR_CALCULATION) * 100" | bc)
+fi
+echo "📈 Percentage of .dart lines changed: $PERCENT_CHANGED%"
+
+# Get current version (e.g., 1.2.3 or 1.2.3+4)
+CURRENT_VERSION_FULL=$(get_current_version)
+if [ -z "$CURRENT_VERSION_FULL" ]; then
+    echo "❌ Error: Could not retrieve current version from pubspec.yaml."
+    exit 1
+fi
+
+# Extract only the MAJOR.MINOR.PATCH part
+CURRENT_VERSION_SEMANTIC=$(echo "$CURRENT_VERSION_FULL" | sed 's/+.*//')
+# Extract the build number part (e.g., +4) if it exists
+BUILD_NUMBER_PART=$(echo "$CURRENT_VERSION_FULL" | grep -o '+[0-9]*' || echo "")
+
+
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION_SEMANTIC"
+
+if ! [[ "$MAJOR" =~ ^[0-9]+$ && "$MINOR" =~ ^[0-9]+$ && "$PATCH" =~ ^[0-9]+$ ]]; then
+    echo "❌ Error: Could not parse current semantic version '$CURRENT_VERSION_SEMANTIC' into MAJOR.MINOR.PATCH numbers."
+    echo "   Please ensure pubspec.yaml version is formatted correctly (e.g., 1.2.3 or 1.2.3+4)."
+    exit 1
+fi
+
+
+echo "Current version: $MAJOR.$MINOR.$PATCH$BUILD_NUMBER_PART"
+
+# Determine version bump type
+BUMP_TYPE=""
+NEW_MAJOR=$MAJOR
+NEW_MINOR=$MINOR
+NEW_PATCH=$PATCH
+
+# bc needs integers for comparison with floating point results if not using -l for relational ops
+# So we compare int(PERCENT_CHANGED) with thresholds, or use bc -l for float comparison
+COMPARE_MAJOR=$(echo "$PERCENT_CHANGED >= 25" | bc -l)
+COMPARE_MINOR=$(echo "$PERCENT_CHANGED >= 10" | bc -l)
+
+if [ "$COMPARE_MAJOR" -eq 1 ]; then
+  BUMP_TYPE="MAJOR"
+  NEW_MAJOR=$((MAJOR + 1))
+  NEW_MINOR=0
+  NEW_PATCH=0
+elif [ "$COMPARE_MINOR" -eq 1 ]; then
+  BUMP_TYPE="MINOR"
+  NEW_MINOR=$((MINOR + 1))
+  NEW_PATCH=0
+else
+  BUMP_TYPE="PATCH"
+  NEW_PATCH=$((PATCH + 1))
+fi
+
+NEW_VERSION_SEMANTIC="$NEW_MAJOR.$NEW_MINOR.$NEW_PATCH"
+NEW_VERSION_FULL="$NEW_VERSION_SEMANTIC$BUILD_NUMBER_PART" # Keep original build number if present
+
+echo "💡 Suggested bump type: $BUMP_TYPE"
+echo "Proposed new version: $NEW_VERSION_FULL"
+
+# Update pubspec.yaml with the new version
+update_pubspec_version "$NEW_VERSION_FULL"

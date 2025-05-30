@@ -3,11 +3,18 @@
 PUBSPEC_FILE="pubspec.yaml"
 CHANGELOG_FILE="CHANGELOG.md"
 
+# Parse optional commit hash argument
+commit_hash="${1:-}"
+
 # Get the current version from pubspec.yaml
 version=$(grep '^version:' "$PUBSPEC_FILE" | awk '{print $2}')
 
-# Get the latest commit message
-commit_msg=$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/ /g')
+# Get the commit message for the specified commit or latest
+if [ -n "$commit_hash" ]; then
+  commit_msg=$(git log -1 --pretty=%B "$commit_hash" | sed ':a;N;$!ba;s/\n/ /g')
+else
+  commit_msg=$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/ /g')
+fi
 
 # Check if this version already exists in the changelog
 if grep -q "## $version" "$CHANGELOG_FILE"; then
