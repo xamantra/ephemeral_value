@@ -189,7 +189,7 @@ NEW_VERSION_FULL="$NEW_VERSION_SEMANTIC$BUILD_NUMBER_PART" # Keep original build
 echo "💡 Suggested bump type: $BUMP_TYPE"
 echo "Proposed new version: $NEW_VERSION_FULL"
 
-echo "new_version=$NEW_VERSION_FULL" >> $env:GITHUB_OUTPUT
+echo "new_version=$NEW_VERSION_FULL" >> $GITHUB_OUTPUT
 
 # Update pubspec.yaml with the new version
 update_pubspec_version "$NEW_VERSION_FULL"
