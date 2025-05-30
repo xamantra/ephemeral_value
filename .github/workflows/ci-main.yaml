@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       target_commit:
-        description: "Optional argument for autosemver.sh and autochangelog.sh"
+        description: "Target commit_hash for semver and changelog generation"
         required: false
         default: ""
 
