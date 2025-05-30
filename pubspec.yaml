@@ -1,6 +1,6 @@
 name: ephemeral_value
 description: Ephemeral value types for Dart and Flutter. Easily represent loading, success, error, empty, and initial states in your app logic and UI.
-version: 1.1.0
+version: 1.0.0
 repository: https://github.com/xamantra/ephemeral_value
 homepage: https://github.com/xamantra/ephemeral_value
 issue_tracker: https://github.com/xamantra/ephemeral_value/issues
