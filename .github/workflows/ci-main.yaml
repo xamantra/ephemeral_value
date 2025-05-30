@@ -11,13 +11,14 @@ on:
         required: false
         default: ""
 
-permissions: # Permissions granted to GITHUB_TOKEN for the entire workflow
-  contents: read
-  pull-requests: write
-
 jobs:
   analyze-and-semver:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -33,6 +34,7 @@ jobs:
         run: dart analyze
 
       - name: Make autosemver.sh executable and run it
+        id: autosemver
         run: |
           chmod +x ./autosemver.sh
           chmod +x ./autochangelog.sh
@@ -48,4 +50,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "auto-semver: Update version and changelog [skip ci]"
+          tagging_message: 'v${{ steps.autosemver.outputs.new_version }}'
+          create_git_tag_only: true
+          skip_dirty_check: false
           # Optional: specify branch, author, etc.
