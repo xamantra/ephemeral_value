@@ -32,7 +32,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-    ephemeral_value: ^1.0.0
+  ephemeral_value: ^1.0.0
 ```
 
 ### 2. Import
@@ -88,9 +88,9 @@ try {
 if (state.user is LoadingValue) {
   return const CircularProgressIndicator();
 } else if (state.user is SuccessValue) {
-  return Text('User: ${(state.user as SuccessValue).value.name}');
+  return Text('User: ${state.user.value.name}');
 } else if (state.user is ErrorValue) {
-  return Text('Error: ${(state.user as ErrorValue).error}');
+  return Text('Error: ${state.user.error}');
 }
 ```
 
