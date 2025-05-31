@@ -21,7 +21,7 @@ fi
 # Update CHANGELOG.md
 # Prepare the changelog entry
 CHANGELOG_FILE="CHANGELOG.md"
-entry="## $VERSION - $(date +"%Y-%m-%d")
+entry="## $VERSION
 
 - $DESCRIPTION
 "
