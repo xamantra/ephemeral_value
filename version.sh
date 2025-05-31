@@ -13,29 +13,34 @@ DESCRIPTION="$2"
 
 # Update pubspec.yaml version
 if grep -q "^version:" pubspec.yaml; then
-  # Use portable sed for in-place edit (works on GNU and BSD)
   sed -i'' -e "s/^version: .*/version: $VERSION/" pubspec.yaml
 else
   echo "version: $VERSION" >> pubspec.yaml
 fi
 
 # Update CHANGELOG.md
-DATE=$(date +"%Y-%m-%d")
-CHANGELOG="CHANGELOG.md"
-if [ ! -f "$CHANGELOG" ]; then
-  echo "# Changelog" > "$CHANGELOG"
+# Prepare the changelog entry
+CHANGELOG_FILE="CHANGELOG.md"
+entry="## $VERSION - $(date +"%Y-%m-%d")
+
+- $DESCRIPTION
+"
+
+# Insert the new entry after the first line (if CHANGELOG starts with a comment) or at the top
+if grep -q '^<!--' "$CHANGELOG_FILE"; then
+  # Insert after the comment block
+  awk -v entry="$entry" 'NR==2{print entry}1' "$CHANGELOG_FILE" > "$CHANGELOG_FILE.tmp" && mv "$CHANGELOG_FILE.tmp" "$CHANGELOG_FILE"
+else
+  # Prepend to the file
+  printf "%s\n%s" "$entry" "$(cat "$CHANGELOG_FILE")" > "$CHANGELOG_FILE"
 fi
 
-# Insert new version at the top after the title
-awk -v ver="$VERSION" -v desc="$DESCRIPTION" -v date="$DATE" '
-  NR==1 { print; print ""; print "## " ver " - " date; print "- " desc; next }
-  NR>1 { print }
-' "$CHANGELOG" > "$CHANGELOG.tmp" && mv "$CHANGELOG.tmp" "$CHANGELOG"
+echo "CHANGELOG.md updated with version $VERSION."
 
 # Commit changes if there are any
 if ! git diff --cached --quiet || ! git diff --quiet; then
   git add pubspec.yaml CHANGELOG.md
-  git commit -m "chore: release v$VERSION – $DESCRIPTION"
+#   git commit -m "chore: release v$VERSION – $DESCRIPTION"
 fi
 
 # Create git tag (force if exists)
