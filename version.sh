@@ -40,7 +40,7 @@ echo "CHANGELOG.md updated with version $VERSION."
 # Commit changes if there are any
 if ! git diff --cached --quiet || ! git diff --quiet; then
   git add pubspec.yaml CHANGELOG.md
-#   git commit -m "chore: release v$VERSION – $DESCRIPTION"
+  git commit -m "chore: release v$VERSION – $DESCRIPTION"
 fi
 
 # Create git tag (force if exists)
