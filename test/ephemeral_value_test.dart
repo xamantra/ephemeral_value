@@ -155,5 +155,53 @@ void main() {
       final n = TestEphemeral<int>(null);
       expect(() => n.toInitial(), throwsA(isA<AssertionError>()));
     });
+
+    test('RefreshingValue equality, toString, and props', () {
+      final a = RefreshingValue<int>(5, 'refreshing');
+      final b = RefreshingValue<int>(5, 'refreshing');
+      final c = RefreshingValue<int>(null);
+
+      expect(a, equals(b));
+      expect(a == c, isFalse);
+      expect(a.toString(), 'RefreshingValue(value: 5, message: refreshing)');
+      expect(c.toString(), 'RefreshingValue(value: null, message: null)');
+      expect(a.props, [5, 'refreshing']);
+      expect(c.props, [null, null]);
+    });
+
+    test('StaleValue equality, toString, and props', () {
+      final now = DateTime.now();
+      final a = StaleValue<int>(6, now, 'stale');
+      final b = StaleValue<int>(6, now, 'stale');
+      final c = StaleValue<int>(null);
+
+      expect(a, equals(b));
+      expect(a == c, isFalse);
+      expect(
+        a.toString(),
+        'StaleValue(value: 6, lastUpdated: $now, message: stale)',
+      );
+      expect(
+        c.toString(),
+        'StaleValue(value: null, lastUpdated: null, message: null)',
+      );
+      expect(a.props, [6, now, 'stale']);
+      expect(c.props, [null, null, null]);
+    });
+
+    test('toRefreshing and toStale transitions', () {
+      final success = SuccessValue<int>(10, 'done');
+      final refreshing = success.toRefreshing(11, 'refresh');
+      expect(refreshing, isA<RefreshingValue<int>>());
+      expect(refreshing.value, 11);
+      expect(refreshing.message, 'refresh');
+
+      final now = DateTime.now();
+      final stale = success.toStale(12, now, 'old');
+      expect(stale, isA<StaleValue<int>>());
+      expect(stale.value, 12);
+      expect(stale.lastUpdated, now);
+      expect(stale.message, 'old');
+    });
   });
 }
