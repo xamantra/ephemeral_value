@@ -1,3 +1,7 @@
+## 1.2.1
+
+- Added new unit test for new utility methods.
+
 ## 1.2.0
 
 - Added more utility methods to EphemeralValue<T> for better state handling.
