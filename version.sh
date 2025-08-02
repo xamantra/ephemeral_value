@@ -1,6 +1,32 @@
 #!/usr/bin/env bash
 # filepath: d:\projects\ephemeral_value\version.sh
 
+# =============================================================================
+# Version Management Script
+# =============================================================================
+# 
+# This script automates the version release process for the ephemeral_value
+# Dart package. It performs the following operations:
+#
+# 1. Updates the version number in pubspec.yaml
+# 2. Adds a new changelog entry to CHANGELOG.md
+# 3. Commits the changes with a descriptive message
+# 4. Creates a git tag for the new version
+#
+# Usage: ./version.sh <version> <description>
+# Example: ./version.sh 1.2.3 "Add new feature for value tracking"
+#
+# The script expects two arguments:
+# - version: The new version number (e.g., 1.2.3)
+# - description: A brief description of the changes in this version
+#
+# The script will:
+# - Replace the version line in pubspec.yaml or add it if missing
+# - Insert a new changelog entry at the top of CHANGELOG.md
+# - Commit changes with message: "chore: release v<version> – <description>"
+# - Create/update a git tag: v<version>
+# =============================================================================
+
 set -e
 
 if [ "$#" -ne 2 ]; then
