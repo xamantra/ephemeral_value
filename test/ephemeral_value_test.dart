@@ -1,4 +1,4 @@
-import 'package:ephemeral_value/src/ephemeral_value_base.dart';
+import 'package:ephemeral_value/ephemeral_value.dart';
 import 'package:test/test.dart';
 
 class TestEphemeral<T> extends Ephemeral<T> {

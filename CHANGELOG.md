@@ -1,3 +1,15 @@
+## 1.2.2
+
+- Fixed issue with extension methods not accessible by projects.
+
+## 1.2.2
+
+- Fixed issue with extension methods not accessible by projects.
+
+## 1.2.2
+
+- Fixed issue with extension methods not accessible by projects.
+
 ## 1.2.1
 
 - Added new unit test for new utility methods.

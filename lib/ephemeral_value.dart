@@ -3,6 +3,4 @@
 /// More dartdocs go here.
 library;
 
-export 'src/ephemeral_value_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/index.dart';
