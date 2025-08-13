@@ -1,3 +1,7 @@
+## 1.3.0
+
+- Remove extensions and moved the state checkers and getter inside Ephemeral<T> class.
+
 ## 1.2.2
 
 - Fixed issue with extension methods not accessible by projects.

@@ -1,5 +1,4 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:equatable/equatable.dart';
+import 'index.dart';
 
 /// Ephemeral values are used to represent the state of a value that can change over time.
 ///
@@ -78,130 +77,118 @@ abstract class Ephemeral<T> {
   StaleValue<T> toStale([T? value, DateTime? lastUpdated, String? message]) {
     return StaleValue<T>(value ?? this.value, lastUpdated, message);
   }
-}
 
-/// Use to intialize a nullable value.
-///
-/// [value] can be null.
-class NoneValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T? value;
+  bool get isNone => this is NoneValue<T>;
+  T? get getNone {
+    if (this is NoneValue<T>) {
+      return (this as NoneValue<T>).value;
+    }
+    throw StateError('Not a NoneValue<$T>. Make sure to check isNone before calling getNone.');
+  }
 
-  const NoneValue(this.value);
+  bool get isInitial => this is InitialValue<T>;
+  T get getInitial {
+    if (this is InitialValue<T>) {
+      return (this as InitialValue<T>).value;
+    }
+    throw StateError('Not an InitialValue<$T>. Make sure to check isInitial before calling getInitial.');
+  }
 
-  @override
-  String toString() => 'NoneValue(value: $value)';
+  bool get isLoading => this is LoadingValue<T>;
+  T? get getLoading {
+    if (this is LoadingValue<T>) {
+      return (this as LoadingValue<T>).value;
+    }
+    throw StateError('Not a LoadingValue<$T>. Make sure to check isLoading before calling getLoading.');
+  }
 
-  @override
-  List<Object?> get props => [value];
-}
+  bool get isSuccess => this is SuccessValue<T>;
+  T get getSuccess {
+    if (this is SuccessValue<T>) {
+      return (this as SuccessValue<T>).value;
+    }
+    throw StateError('Not a SuccessValue<$T>. Make sure to check isSuccess before calling getSuccess.');
+  }
 
-/// Use to initialize a non-nullable value.
-///
-/// [value] must not be null.
-class InitialValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T value;
-  final String? message;
+  bool get isError => this is ErrorValue<T>;
+  Object? get getError {
+    if (this is ErrorValue<T>) {
+      return (this as ErrorValue<T>).error;
+    }
+    throw StateError('Not an ErrorValue<$T>. Make sure to check isError before calling getError.');
+  }
 
-  const InitialValue(this.value, [this.message]);
+  bool get isEmpty => this is EmptyValue<T>;
+  T? get getEmpty {
+    if (this is EmptyValue<T>) {
+      return (this as EmptyValue<T>).value;
+    }
+    throw StateError('Not an EmptyValue<$T>. Make sure to check isEmpty before calling getEmpty.');
+  }
 
-  @override
-  String toString() => 'InitialValue(value: $value, message: $message)';
+  bool get isRefreshing => this is RefreshingValue<T>;
+  T? get getRefreshing {
+    if (this is RefreshingValue<T>) {
+      return (this as RefreshingValue<T>).value;
+    }
+    throw StateError('Not a RefreshingValue<$T>. Make sure to check isRefreshing before calling getRefreshing.');
+  }
 
-  @override
-  List<Object?> get props => [value, message];
-}
+  bool get isStale => this is StaleValue<T>;
+  T? get getStale {
+    if (this is StaleValue<T>) {
+      return (this as StaleValue<T>).value;
+    }
+    throw StateError('Not a StaleValue<$T>. Make sure to check isStale before calling getStale.');
+  }
 
-/// A state indicating that the value is currently being loaded.
-class LoadingValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T? value;
-  final String? message;
+  DateTime? get getStaleLastUpdated {
+    if (this is StaleValue<T>) {
+      return (this as StaleValue<T>).lastUpdated;
+    }
+    throw StateError('Not a StaleValue<$T>. Make sure to check isStale before calling getStaleLastUpdated.');
+  }
 
-  const LoadingValue([this.value, this.message]);
+  // Message getters for states that support messages
+  String? get getInitialMessage {
+    if (this is InitialValue<T>) {
+      return (this as InitialValue<T>).message;
+    }
+    throw StateError('Not an InitialValue<$T>. Make sure to check isInitial before calling getInitialMessage.');
+  }
 
-  @override
-  String toString() => 'LoadingValue(value: $value, message: $message)';
+  String? get getLoadingMessage {
+    if (this is LoadingValue<T>) {
+      return (this as LoadingValue<T>).message;
+    }
+    throw StateError('Not a LoadingValue<$T>. Make sure to check isLoading before calling getLoadingMessage.');
+  }
 
-  @override
-  List<Object?> get props => [value, message];
-}
+  String? get getSuccessMessage {
+    if (this is SuccessValue<T>) {
+      return (this as SuccessValue<T>).message;
+    }
+    throw StateError('Not a SuccessValue<$T>. Make sure to check isSuccess before calling getSuccessMessage.');
+  }
 
-/// A state indicating that the value has been successfully loaded.
-class SuccessValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T value;
-  final String? message;
+  String? get getEmptyMessage {
+    if (this is EmptyValue<T>) {
+      return (this as EmptyValue<T>).message;
+    }
+    throw StateError('Not an EmptyValue<$T>. Make sure to check isEmpty before calling getEmptyMessage.');
+  }
 
-  const SuccessValue(this.value, [this.message]);
+  String? get getRefreshingMessage {
+    if (this is RefreshingValue<T>) {
+      return (this as RefreshingValue<T>).message;
+    }
+    throw StateError('Not a RefreshingValue<$T>. Make sure to check isRefreshing before calling getRefreshingMessage.');
+  }
 
-  @override
-  String toString() => 'SuccessValue(value: $value, message: $message)';
-
-  @override
-  List<Object?> get props => [value, message];
-}
-
-/// A state indicating that an error occurred while loading the value.
-class ErrorValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T? value;
-  final Object? error;
-
-  const ErrorValue([this.value, this.error]);
-
-  @override
-  String toString() => 'ErrorValue(value: $value, error: $error)';
-
-  @override
-  List<Object?> get props => [value, error];
-}
-
-/// A state indicating that it's successfully loaded but the value is just empty or null.
-///
-/// If unsure, just use [SuccessValue] instead.
-class EmptyValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T? value;
-  final String? message;
-
-  const EmptyValue([this.value, this.message]);
-
-  @override
-  String toString() => 'EmptyValue(value: $value, message: $message)';
-
-  @override
-  List<Object?> get props => [value, message];
-}
-
-/// A state indicating that the value is being refreshed (e.g., background update).
-class RefreshingValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T? value;
-  final String? message;
-
-  const RefreshingValue([this.value, this.message]);
-
-  @override
-  String toString() => 'RefreshingValue(value: $value, message: $message)';
-
-  @override
-  List<Object?> get props => [value, message];
-}
-
-/// A state indicating that the value is available but outdated (stale).
-class StaleValue<T> extends Ephemeral<T> with EquatableMixin {
-  @override
-  final T? value;
-  final DateTime? lastUpdated;
-  final String? message;
-
-  const StaleValue([this.value, this.lastUpdated, this.message]);
-
-  @override
-  String toString() => 'StaleValue(value: $value, lastUpdated: $lastUpdated, message: $message)';
-
-  @override
-  List<Object?> get props => [value, lastUpdated, message];
+  String? get getStaleMessage {
+    if (this is StaleValue<T>) {
+      return (this as StaleValue<T>).message;
+    }
+    throw StateError('Not a StaleValue<$T>. Make sure to check isStale before calling getStaleMessage.');
+  }
 }

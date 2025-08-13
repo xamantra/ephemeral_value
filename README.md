@@ -68,8 +68,8 @@ class LoginState {
   final Ephemeral<List<Post>> posts;
 
   LoginState({
-    this.user = const NoneValue(null),
-    this.posts = const NoneValue(null),
+    this.user = const NoneValue(),
+    this.posts = const NoneValue(),
   });
 
   LoginState copyWith({
@@ -142,7 +142,7 @@ Abstract base class for all ephemeral value types.
 Represents an initial nullable value.
 
 ```dart
-const NoneValue(null)           // No initial value
+const NoneValue()           // Null initial value
 const NoneValue("Jane Doe")     // With initial value
 ```
 
@@ -426,9 +426,9 @@ class DashboardState {
   final Ephemeral<Analytics> analytics;
 
   DashboardState({
-    this.currentUser = const NoneValue(null),
-    this.posts = const NoneValue(null),
-    this.analytics = const NoneValue(null),
+    this.currentUser = const NoneValue(),
+    this.posts = const NoneValue(),
+    this.analytics = const NoneValue(),
   });
 
   DashboardState copyWith({
@@ -462,7 +462,7 @@ class DashboardState {
 
 ```dart
 // Pattern 1: Force new value
-Ephemeral<User> user = NoneValue(null);
+Ephemeral<User> user = NoneValue();
 user = NoneValue(newUser); // Forces new value
 
 // Pattern 2: Retain current value
